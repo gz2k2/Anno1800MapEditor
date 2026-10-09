@@ -1,8 +1,10 @@
 ﻿using AnnoMapEditor.MapTemplates.Enums;
 using AnnoMapEditor.MapTemplates.Models;
+using AnnoMapEditor.UI.Controls.Toolbar;
 using AnnoMapEditor.Utilities;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Media.Imaging;
 
@@ -38,6 +40,10 @@ namespace AnnoMapEditor.UI.Controls.MapTemplates
 
             if (_fixedIsland.Label != null) OnPropertyChanged(nameof(Label));
 
+            PropertyChangedEventManager.AddHandler(
+                ToolbarService.Instance,
+                ToolbarService_PropertyChanged,
+                nameof(ToolbarService.SnapContinentalIslandsToCorners));
             SnapContinentalIsland();
             UpdateThumbnailRotation();
 
@@ -59,6 +65,13 @@ namespace AnnoMapEditor.UI.Controls.MapTemplates
                 SnapContinentalIsland();
             if (e.PropertyName == nameof(FixedIslandElement.SlotAssignments))
                 SlotAssignments = new(_fixedIsland.SlotAssignments.Values.Where(s => s.Slot.SlotAsset != null));
+        }
+
+        private void ToolbarService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(ToolbarService.SnapContinentalIslandsToCorners)
+                && ToolbarService.Instance.SnapContinentalIslandsToCorners)
+                SnapContinentalIsland();
         }
 
         private void Redraw()
@@ -85,7 +98,7 @@ namespace AnnoMapEditor.UI.Controls.MapTemplates
         // If a continental island is placed elswhere, it would result in graphical glitches.
         private void SnapContinentalIsland()
         {
-            if (!IsOutOfBounds && _isContinentalIsland)
+            if (ToolbarService.Instance.SnapContinentalIslandsToCorners && !IsOutOfBounds && _isContinentalIsland)
             {
                 Vector2 islandCenter = _fixedIsland.Position;
                 Vector2 mapCenterOffset = new((_mapTemplate.Size.X - Island.SizeInTiles) / 2, (_mapTemplate.Size.Y - Island.SizeInTiles) / 2);

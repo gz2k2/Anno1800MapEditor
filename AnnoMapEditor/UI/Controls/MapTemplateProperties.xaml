@@ -45,6 +45,7 @@
                 <ComboBox
                     Margin="0, 5"
                     HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding CanSelectSession}"
                     ItemsSource="{Binding SupportedSessions}"
                     SelectedItem="{Binding SelectedSession}">
                     <ComboBox.ItemTemplate>

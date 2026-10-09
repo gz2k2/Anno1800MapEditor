@@ -228,7 +228,7 @@ namespace AnnoMapEditor.Mods.Serialization
               .Append($"    <TemplateFilename>{templateFilename.Replace('\\', '/')}</TemplateFilename>\n");
 
             if (enlargedTemplateFilename != null)
-                sb.Append($"    <EnlargedTemplateFilename>{templateFilename.Replace('\\', '/')}</EnlargedTemplateFilename>\n");
+                sb.Append($"    <EnlargedTemplateFilename>{enlargedTemplateFilename.Replace('\\', '/')}</EnlargedTemplateFilename>\n");
 
             sb.Append($"  </ModOp>\n");
         }

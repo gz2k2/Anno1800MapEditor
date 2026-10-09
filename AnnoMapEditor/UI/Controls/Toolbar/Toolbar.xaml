@@ -73,6 +73,10 @@
         <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe8c8;"/>
         <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe77f;"/>
         <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe8c6;"/>
+        <CheckBox Content="Fix continental islands to corners"
+                  IsChecked="{Binding ToolbarService.SnapContinentalIslandsToCorners, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                  Margin="8,0"
+                  ToolTip="Automatically position and rotate continental islands in the map corners"/>
         <Border Width="8" Margin="0,4,7,4" BorderThickness =" 0,0,1,0" BorderBrush="#505050"/>
         <Button IsEnabled="True" Style="{StaticResource ToolbarButton}" Content="&#xe73f;" Click="ZoomReset_Click" ToolTip="Reset map zoom">
             <!-- Context Menu for testing layout style -->

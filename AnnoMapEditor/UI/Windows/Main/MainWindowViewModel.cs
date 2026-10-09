@@ -144,8 +144,10 @@ namespace AnnoMapEditor.UI.Windows.Main
 
         private void CommonConstructor()
         {
-            if (Settings.Instance.DataPath != null)
+            if (DataManager.IsInitialized)
                 Status = $"Game Path: {Settings.Instance.GamePath}";
+            else
+                Status = "Game files are not loaded. Island placement is unavailable.";
             
             MapTemplate.ShowLabels = true;
             

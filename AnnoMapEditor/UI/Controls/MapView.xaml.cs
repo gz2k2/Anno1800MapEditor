@@ -1,4 +1,5 @@
-﻿using AnnoMapEditor.MapTemplates.Enums;
+﻿using AnnoMapEditor.DataArchives;
+using AnnoMapEditor.MapTemplates.Enums;
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.UI.Controls.AddIsland;
 using AnnoMapEditor.UI.Controls.Dragging;
@@ -286,7 +287,11 @@ namespace AnnoMapEditor.UI.Controls
             AddIslandViewModel viewModel = new(mapElementType, type, size);
             AddIslandButton button = new()
             {
-                DataContext = viewModel
+                DataContext = viewModel,
+                IsEnabled = DataManager.Instance.IsInitialized,
+                ToolTip = DataManager.Instance.IsInitialized
+                    ? null
+                    : "Load game files to add islands."
             };
 
             viewModel.IslandAdded += AddIslandButton_IslandAdded;

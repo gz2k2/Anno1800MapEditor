@@ -1,4 +1,5 @@
-﻿using AnnoMapEditor.MapTemplates.Enums;
+﻿using AnnoMapEditor.DataArchives;
+using AnnoMapEditor.MapTemplates.Enums;
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.MapTemplates.Validation;
 using AnnoMapEditor.Utilities;
@@ -70,6 +71,18 @@ namespace AnnoMapEditor.UI.Controls.MapTemplates
         public void Update()
         {
             Results.Clear();
+
+            if (!DataManager.Instance.IsInitialized || _mapTemplate.Session?.Region == null)
+            {
+                Results.Add(new(
+                    MapTemplateValidatorStatus.Warning,
+                    "Validation unavailable",
+                    "Load game files to validate this map."));
+                HasErrors = false;
+                HasWarnings = true;
+                HasErrorsOrWarnings = true;
+                return;
+            }
 
             bool hasWarnings = false;
             bool hasErrors = false;

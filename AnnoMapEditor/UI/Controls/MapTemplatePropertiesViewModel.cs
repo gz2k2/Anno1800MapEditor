@@ -1,4 +1,5 @@
 ﻿using AnnoMapEditor.DataArchives.Assets.Models;
+using AnnoMapEditor.DataArchives;
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.Utilities;
 using System;
@@ -53,7 +54,10 @@ namespace AnnoMapEditor.UI.Controls
                 _mapTemplate.PlayableArea.Y + _mapTemplate.PlayableArea.Height);
         }
 
-        public IEnumerable<SessionAsset> SupportedSessions { get; } = SessionAsset.SupportedSessions;
+        public IEnumerable<SessionAsset> SupportedSessions { get; } =
+            DataManager.Instance.IsInitialized ? SessionAsset.SupportedSessions : Array.Empty<SessionAsset>();
+
+        public bool CanSelectSession => DataManager.Instance.IsInitialized;
 
         public int MapSize
         {

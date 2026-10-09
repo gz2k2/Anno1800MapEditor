@@ -159,9 +159,10 @@
             <Button Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="2"
                     Margin="0,30,0,0"
                     Height="40"
-                    Content="Continue"
+                    Content="Continue to Editor"
                     Click="NewMap_Click"
-                    IsEnabled="{Binding DataManager.IsInitialized}"/>
+                    IsEnabled="{Binding DataManager.IsInitializing, Converter={StaticResource booleanNot}}"
+                    ToolTip="You can enter the editor without game files, but island assets will be unavailable."/>
             <!-- data path -->
             <!--
             <TextBlock Grid.Row="4" Grid.Column="0"
