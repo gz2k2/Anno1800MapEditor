@@ -551,7 +551,7 @@ namespace AnnoMapEditor.UI.Controls
 
             FixedIslandElement fixedIslandElement = new(e.IslandAsset, islandType)
             {
-                Label = IslandType.DefaultIslandLabelFromFileName(fileName),
+                Label = e.IslandAsset.DisplayName,
                 Position = position
             };
             _mapTemplate.Elements.Add(fixedIslandElement);
