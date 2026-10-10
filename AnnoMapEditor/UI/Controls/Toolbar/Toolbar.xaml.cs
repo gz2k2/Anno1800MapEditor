@@ -77,5 +77,15 @@ namespace AnnoMapEditor.UI.Controls.Toolbar
         {
             ToolbarService.Instance.ButtonClick(ToolbarButtonType.DeleteIsland);
         }
+
+        private void CopyIsland_Click(object sender, RoutedEventArgs e)
+        {
+            ToolbarService.Instance.ButtonClick(ToolbarButtonType.CopyIsland);
+        }
+
+        private void PasteIsland_Click(object sender, RoutedEventArgs e)
+        {
+            ToolbarService.Instance.ButtonClick(ToolbarButtonType.PasteIsland);
+        }
     }
 }

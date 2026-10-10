@@ -56,6 +56,13 @@ namespace AnnoMapEditor.UI.Controls.Toolbar
         }
         private bool _selectedIslandActionsEnabled = false;
 
+        public bool CanPasteIsland
+        {
+            get => _canPasteIsland;
+            set => SetProperty(ref _canPasteIsland, value);
+        }
+        private bool _canPasteIsland = false;
+
         public bool ZoomOutButtonEnabled
         {
             get => _zoomOutButtonEnabled;

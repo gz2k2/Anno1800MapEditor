@@ -8,6 +8,7 @@ using AnnoMapEditor.DataArchives.Assets.Models;
 using AnnoMapEditor.MapTemplates.Enums;
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.UI.Controls.Slots;
+using AnnoMapEditor.UI.Controls.Toolbar;
 using AnnoMapEditor.Utilities;
 using AnnoMapEditor.Utilities.UndoRedo;
 
@@ -29,6 +30,10 @@ namespace AnnoMapEditor.UI.Controls.IslandProperties
             
             SelectedIsland.PropertyChanged += SelectedIsland_PropertyChanged;
             MapTemplate.PropertyChanged += MapTemplate_PropertyChanged;
+            PropertyChangedEventManager.AddHandler(
+                ToolbarService.Instance,
+                ToolbarService_PropertyChanged,
+                nameof(ToolbarService.SnapContinentalIslandsToCorners));
             
             switch (SelectedIsland)
             {
@@ -81,7 +86,8 @@ namespace AnnoMapEditor.UI.Controls.IslandProperties
         }
         public byte? IslandRotation => (SelectedIsland as FixedIslandElement)?.Rotation;
         public bool IslandRotationPropertiesVisible => (SelectedIsland is FixedIslandElement element && 
-                                                        element.IslandAsset.IslandSize.FirstOrDefault() != IslandSize.Continental);
+                                                        (element.IslandAsset.IslandSize.FirstOrDefault() != IslandSize.Continental ||
+                                                         !ToolbarService.Instance.SnapContinentalIslandsToCorners));
         public bool RandomizeFertilities
         {
             get => (SelectedIsland as FixedIslandElement)?.RandomizeFertilities ?? true;
@@ -102,6 +108,11 @@ namespace AnnoMapEditor.UI.Controls.IslandProperties
         public bool AllowedFertilitiesWarning => FertilityItems.Any(f => f is { IsAllowed: false, IsSelected: true })
                                                  && !RandomizeFertilities;
         public SlotsViewModel? SlotsViewModel { get; private set; }
+
+        private void ToolbarService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(IslandRotationPropertiesVisible));
+        }
 
         public IslandSize? IslandSize
         {

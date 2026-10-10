@@ -138,21 +138,24 @@ namespace AnnoMapEditor.Mods.Serialization
             WriteA7T(mod, a7tPath);
             WriteA7te(mod.MapTemplate.Size.X, a7tePath);
 
+            if (firstMapTemplate.EnlargedTemplateFilename != null)
+            {
+                string enlargedA7tPath = GetEnlargedTemplatePath(a7tPath);
+                CopyTemplateFiles(a7tPath, a7tinfoPath, a7tePath, enlargedA7tPath);
+            }
+
             // copy a7t, a7tinfo and a7te for all MapTemplates that must be replaced
             for (int i = 1; i < mapTemplatesToReplace.Count; ++i)
             {
                 MapTemplateAsset mapTemplate = mapTemplatesToReplace[i];
                 string mapFilename = Path.GetFileNameWithoutExtension(mapTemplate.TemplateFilename);
 
-                File.Copy(a7tPath, Path.Combine(mapFileDirectory, mapFilename + ".a7t"));
-                File.Copy(a7tinfoPath, Path.Combine(mapFileDirectory, mapFilename + ".a7tinfo"));
-                File.Copy(a7tePath, Path.Combine(mapFileDirectory, mapFilename + ".a7te"));
+                string targetA7tPath = Path.Combine(mapFileDirectory, mapFilename + ".a7t");
+                CopyTemplateFiles(a7tPath, a7tinfoPath, a7tePath, targetA7tPath);
 
                 if (mapTemplate.EnlargedTemplateFilename != null)
                 {
-                    File.Copy(a7tPath, Path.Combine(mapFileDirectory, mapFilename + "_enlarged.a7t"));
-                    File.Copy(a7tinfoPath, Path.Combine(mapFileDirectory, mapFilename + "_enlarged.a7tinfo"));
-                    File.Copy(a7tePath, Path.Combine(mapFileDirectory, mapFilename + "_enlarged.a7te"));
+                    CopyTemplateFiles(a7tPath, a7tinfoPath, a7tePath, GetEnlargedTemplatePath(targetA7tPath));
                 }
             }
 
@@ -175,12 +178,11 @@ namespace AnnoMapEditor.Mods.Serialization
             foreach (MapTemplateAsset mapTemplateAsset in mapTemplatesToReplace)
             {
                 string templateFilename = Path.Combine(AME_POOL_PATH, Path.GetFileName(mapTemplateAsset.TemplateFilename));
-                string? enlargedTemplateFilename = mapTemplateAsset.EnlargedTemplateFilename != null ? Path.Combine(AME_POOL_PATH, Path.GetFileName(mapTemplateAsset.EnlargedTemplateFilename)) : null;
+                string? enlargedTemplateFilename = mapTemplateAsset.EnlargedTemplateFilename != null
+                    ? GetEnlargedTemplatePath(templateFilename)
+                    : null;
 
                 WriteModOpReplaceTemplateFilename(sb, mapTemplateAsset.GUID, templateFilename, enlargedTemplateFilename);
-
-                if (mapTemplateAsset.EnlargedTemplateFilename != null)
-                    WriteModOpReplaceTemplateFilename(sb, mapTemplateAsset.GUID, templateFilename, enlargedTemplateFilename);
             }
 
             sb.Append("</ModOps>\n");
@@ -231,6 +233,19 @@ namespace AnnoMapEditor.Mods.Serialization
                 sb.Append($"    <EnlargedTemplateFilename>{enlargedTemplateFilename.Replace('\\', '/')}</EnlargedTemplateFilename>\n");
 
             sb.Append($"  </ModOp>\n");
+        }
+
+        private static string GetEnlargedTemplatePath(string templatePath)
+        {
+            string filename = Path.GetFileNameWithoutExtension(templatePath) + "_enlarged.a7t";
+            return Path.Combine(Path.GetDirectoryName(templatePath)!, filename);
+        }
+
+        private static void CopyTemplateFiles(string a7tPath, string a7tinfoPath, string a7tePath, string targetA7tPath)
+        {
+            File.Copy(a7tPath, targetA7tPath);
+            File.Copy(a7tinfoPath, Path.ChangeExtension(targetA7tPath, "a7tinfo"));
+            File.Copy(a7tePath, Path.ChangeExtension(targetA7tPath, "a7te"));
         }
 
 

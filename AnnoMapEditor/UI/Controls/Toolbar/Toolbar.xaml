@@ -70,8 +70,8 @@
         <Border Width="8" Margin="0,4,7,4" BorderThickness =" 0,0,1,0" BorderBrush="#505050"/>
         <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe710;"/>
         <Button IsEnabled="{Binding ToolbarService.SelectedIslandActionsEnabled}" Style="{StaticResource ToolbarButton}" Content="&#xe74d;" Click="DeleteIsland_Click"/>
-        <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe8c8;"/>
-        <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe77f;"/>
+        <Button IsEnabled="{Binding ToolbarService.SelectedIslandActionsEnabled}" Style="{StaticResource ToolbarButton}" Content="&#xe8c8;" Click="CopyIsland_Click" ToolTip="Copy island"/>
+        <Button IsEnabled="{Binding ToolbarService.CanPasteIsland}" Style="{StaticResource ToolbarButton}" Content="&#xe77f;" Click="PasteIsland_Click" ToolTip="Paste island"/>
         <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe8c6;"/>
         <CheckBox Content="Fix continental islands to corners"
                   IsChecked="{Binding ToolbarService.SnapContinentalIslandsToCorners, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"

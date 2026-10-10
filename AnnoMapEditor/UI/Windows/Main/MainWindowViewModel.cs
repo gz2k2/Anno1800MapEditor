@@ -18,6 +18,7 @@ using AnnoMapEditor.UI.Controls.Toolbar;
 using AnnoMapEditor.UI.Overlays;
 using AnnoMapEditor.UI.Overlays.ExportAsMod;
 using MapTemplate = AnnoMapEditor.MapTemplates.Models.MapTemplate;
+using System;
 
 namespace AnnoMapEditor.UI.Windows.Main
 {
@@ -85,6 +86,9 @@ namespace AnnoMapEditor.UI.Windows.Main
             }
         }
         private IslandElement? _selectedIsland;
+
+        private IslandElement? _copiedIsland;
+        private int _pasteCount;
 
         /**
          * Make sure to notice if an element has been remove from the canvas. If it was selected, deselect it.
@@ -158,6 +162,12 @@ namespace AnnoMapEditor.UI.Windows.Main
                 {
                     case ToolbarButtonType.DeleteIsland:
                         DeleteSelectedIsland();
+                        break;
+                    case ToolbarButtonType.CopyIsland:
+                        CopySelectedIsland();
+                        break;
+                    case ToolbarButtonType.PasteIsland:
+                        PasteIsland();
                         break;
                     case ToolbarButtonType.NewMap:
                         CreateNewMap();
@@ -316,8 +326,77 @@ namespace AnnoMapEditor.UI.Windows.Main
             // SelectedUnifiedIslandPropertiesViewModel = null;
         }
 
+        private void CopySelectedIsland()
+        {
+            if (SelectedIsland == null) return;
+
+            _copiedIsland = CloneIsland(SelectedIsland);
+            _pasteCount = 0;
+            ToolbarService.Instance.CanPasteIsland = true;
+        }
+
+        private void PasteIsland()
+        {
+            if (_copiedIsland == null) return;
+
+            const int PASTE_OFFSET = 80;
+            IslandElement pastedIsland = CloneIsland(_copiedIsland);
+            int offset = PASTE_OFFSET * ++_pasteCount;
+            int maxX = Math.Max(0, MapTemplate.Size.X - pastedIsland.SizeInTiles);
+            int maxY = Math.Max(0, MapTemplate.Size.Y - pastedIsland.SizeInTiles);
+            maxX = maxX / 8 * 8;
+            maxY = maxY / 8 * 8;
+            pastedIsland.Position = new Vector2(
+                Math.Clamp(_copiedIsland.Position.X + offset, 0, maxX),
+                Math.Clamp(_copiedIsland.Position.Y + offset, 0, maxY));
+
+            MapTemplate.Elements.Add(pastedIsland);
+            UndoRedoStack.Instance.Do(new IslandAddStackEntry(pastedIsland, MapTemplate));
+        }
+
+        private static IslandElement CloneIsland(IslandElement island)
+        {
+            if (island is FixedIslandElement fixedIsland)
+            {
+                FixedIslandElement clone = new(fixedIsland.IslandAsset, fixedIsland.IslandType)
+                {
+                    Position = new Vector2(fixedIsland.Position),
+                    Label = fixedIsland.Label,
+                    IslandDifficulty = fixedIsland.IslandDifficulty,
+                    Rotation = fixedIsland.Rotation,
+                    RandomizeFertilities = fixedIsland.RandomizeFertilities,
+                    RandomizeSlots = fixedIsland.RandomizeSlots
+                };
+
+                foreach (var fertility in fixedIsland.Fertilities)
+                    clone.Fertilities.Add(fertility);
+
+                foreach (var (objectId, assignment) in fixedIsland.SlotAssignments)
+                {
+                    if (clone.SlotAssignments.TryGetValue(objectId, out var cloneAssignment))
+                        cloneAssignment.AssignedSlot = assignment.AssignedSlot;
+                }
+
+                return clone;
+            }
+
+            if (island is RandomIslandElement randomIsland)
+            {
+                return new RandomIslandElement(randomIsland.IslandSize, randomIsland.IslandType)
+                {
+                    Position = new Vector2(randomIsland.Position),
+                    Label = randomIsland.Label,
+                    IslandDifficulty = randomIsland.IslandDifficulty
+                };
+            }
+
+            throw new NotSupportedException($"Cannot copy island type '{island.GetType().Name}'.");
+        }
+
         public ICommand UndoCommand => new ActionCommand(_ => Undo());
         public ICommand RedoCommand => new ActionCommand(_ => Redo());
+        public ICommand CopyCommand => new ActionCommand(_ => CopySelectedIsland());
+        public ICommand PasteCommand => new ActionCommand(_ => PasteIsland());
         public ICommand RemoveCommand => new ActionCommand(_ => DeleteSelectedIsland());
     }
 }
