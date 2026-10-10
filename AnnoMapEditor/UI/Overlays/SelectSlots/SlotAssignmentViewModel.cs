@@ -2,9 +2,7 @@
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.Utilities;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows.Data;
 using System.Windows.Media;
 
@@ -68,7 +66,6 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
             set
             {
                 SetProperty(ref _selectedRegion, value);
-                UpdateSlotItems();
                 UpdateFilter();
             }
         }
@@ -80,8 +77,9 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
             SlotAssignment = slotAssignment;
             _selectedRegion = selectedRegion;
 
-            SlotItems = new();
-            UpdateSlotItems();
+            // copy the list of allowed replacements and add the EmptySlot to the end
+            SlotItems = new(slotAssignment.Slot.SlotAsset!.ReplacementSlotAssets);
+            SlotItems.Add(EmptySlot);
 
             CollectionView fertilitiesView = (CollectionView)CollectionViewSource.GetDefaultView(SlotItems);
             fertilitiesView.Filter = SlotAssetFilter;
@@ -95,60 +93,23 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
             if (item is not SlotAsset slotAsset)
                 throw new ArgumentException();
 
-            if (_selectedRegion == RegionAsset.SouthAmerica && slotAsset.GUID == 1010501)
-                return false;
-
-            if (slotAsset == EmptySlot || slotAsset == AssignedSlot)
+            // Warning: Hardcoding
+            // SouthAmerica uses both random mine slots 614 and 1000029. However, none of the
+            // replacements for 1000029 contain the New World as an AssociatedRegion. Despite of
+            // this, it is possible to have both 1010502 Iron Deposit and 1010507 Gold Deposit in
+            // the New World.
+            if (_selectedRegion == RegionAsset.SouthAmerica
+                && SlotAssignment.Slot.ObjectGuid == SlotAsset.RANDOM_MINE_OLD_WORLD_GUID
+                && (slotAsset.GUID == 1010501 || slotAsset.GUID == 1010507))
                 return true;
 
-            if (_selectedRegion == RegionAsset.SouthAmerica
-                && slotAsset.GUID == 1010507)
+            if (slotAsset == EmptySlot || slotAsset == AssignedSlot)
                 return true;
 
             if (slotAsset.AssociatedRegions.Contains(_selectedRegion))
                 return true;
 
             return false;
-        }
-
-        private void UpdateSlotItems()
-        {
-            SlotItems.Clear();
-
-            long slotGuid = SlotAssignment.Slot.ObjectGuid;
-            SlotAsset? regionalMineSlot = null;
-            if (slotGuid == SlotAsset.RANDOM_MINE_OLD_WORLD_GUID
-                || slotGuid == SlotAsset.RANDOM_MINE_NEW_WORLD_GUID
-                || slotGuid == SlotAsset.RANDOM_MINE_ARCTIC_GUID)
-            {
-                if (_selectedRegion == RegionAsset.SouthAmerica)
-                    regionalMineSlot = SlotAsset.RandomMineNewWorld;
-                else if (_selectedRegion == RegionAsset.Arctic)
-                    regionalMineSlot = SlotAsset.RandomMineArctic;
-                else if (_selectedRegion == RegionAsset.Moderate)
-                    regionalMineSlot = SlotAsset.RandomMineOldWorld;
-            }
-
-            IEnumerable<SlotAsset> replacements = regionalMineSlot?.ReplacementSlotAssets
-                ?? SlotAssignment.Slot.SlotAsset!.ReplacementSlotAssets;
-
-            foreach (SlotAsset replacement in replacements)
-                SlotItems.Add(replacement);
-
-            if (_selectedRegion == RegionAsset.SouthAmerica && regionalMineSlot != null)
-            {
-                foreach (SlotAsset replacement in SlotAsset.RandomMineOldWorld.ReplacementSlotAssets
-                             .Where(asset => asset.GUID == 1010507))
-                {
-                    if (!SlotItems.Contains(replacement))
-                        SlotItems.Add(replacement);
-                }
-            }
-
-            if (AssignedSlot != EmptySlot && !SlotItems.Contains(AssignedSlot))
-                SlotItems.Add(AssignedSlot);
-
-            SlotItems.Add(EmptySlot);
         }
 
         private void UpdateFilter()
