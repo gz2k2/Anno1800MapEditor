@@ -40,7 +40,10 @@ namespace AnnoMapEditor.UI.Controls.IslandProperties
                 case FixedIslandElement fixedIsland:
                     fixedIsland.Fertilities.CollectionChanged += Fertilities_CollectionChanged;
                     SlotsViewModel = new SlotsViewModel(fixedIsland, MapTemplate.Session.Region);
-                    IslandTypeItems.AddRange(fixedIsland.IslandAsset.IslandType);
+                    if (fixedIsland.IslandAsset.IslandSize.Contains(IslandSize.Continental))
+                        IslandTypeItems.AddRange(AllowedTypesPerElementType[MapElementType.FixedIsland]);
+                    else
+                        IslandTypeItems.AddRange(fixedIsland.IslandAsset.IslandType);
                     UpdateSelectedFertilities();
                     break;
                 case RandomIslandElement randomIsland:
@@ -74,7 +77,10 @@ namespace AnnoMapEditor.UI.Controls.IslandProperties
         public ObservableCollection<IslandSize> IslandSizeItems { get; } = new();
         public bool IslandSizeItemsVisible => IslandSizeItems.Count > 1;
         public ObservableCollection<IslandType> IslandTypeItems { get; } = new();
-        public bool IslandTypeItemsVisible => IslandTypeItems.Count > 1;
+        public bool IslandTypeItemsVisible => IslandTypeItems.Count > 1
+            && (SelectedIsland is not FixedIslandElement fixedIsland
+                || !fixedIsland.IslandAsset.IslandSize.Contains(IslandSize.Continental)
+                || !ToolbarService.Instance.SnapContinentalIslandsToCorners);
         public bool RandomizeRotation
         {
             get => (SelectedIsland as FixedIslandElement)?.RandomizeRotation ?? true;
@@ -112,6 +118,7 @@ namespace AnnoMapEditor.UI.Controls.IslandProperties
         private void ToolbarService_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(IslandRotationPropertiesVisible));
+            OnPropertyChanged(nameof(IslandTypeItemsVisible));
         }
 
         public IslandSize? IslandSize
