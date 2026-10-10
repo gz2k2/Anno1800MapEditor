@@ -37,6 +37,8 @@ namespace AnnoMapEditor.DataArchives.Assets.Models
 
         public string DisplayName { get; init; }
 
+        public string DisplayNameWithGuid => GUID == 0 ? DisplayName : $"{DisplayName} - {GUID}";
+
         public string? SlotType { get; init; }
 
         public bool IsRandomSlot { get; init; }
