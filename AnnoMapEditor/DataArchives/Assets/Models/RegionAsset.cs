@@ -16,6 +16,7 @@ namespace AnnoMapEditor.DataArchives.Assets.Models
         public const long REGION_SOUTHAMERICA_GUID = 5000001;
         public const long REGION_ARCTIC_GUID = 160001;
         public const long REGION_AFRICA_GUID = 114327;
+        public const long REGION_NEW_WORLD_ALL_ORES_GUID = -1;
 
         public const string REGION_MODERATE_REGIONID = "Moderate";
 
@@ -32,7 +33,20 @@ namespace AnnoMapEditor.DataArchives.Assets.Models
         [StaticAsset(REGION_AFRICA_GUID)]
         public static RegionAsset Africa { get; private set; }
 
+        public static RegionAsset NewWorldAllOres { get; } = new("The New World - all Ores");
+
         public static IEnumerable<RegionAsset> SupportedRegions => new[] { Moderate, SouthAmerica, Arctic, Africa };
+
+
+        private RegionAsset(string displayName)
+            : base()
+        {
+            GUID = REGION_NEW_WORLD_ALL_ORES_GUID;
+            DisplayName = displayName;
+            RegionID = string.Empty;
+            AllowedFertilityGuids = Array.Empty<long>();
+            AllowedFertilities = Array.Empty<FertilityAsset>();
+        }
 
 
         /// <summary>

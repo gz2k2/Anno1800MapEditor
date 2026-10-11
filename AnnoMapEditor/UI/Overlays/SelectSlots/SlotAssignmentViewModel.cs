@@ -2,6 +2,8 @@
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.Utilities;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -10,6 +12,8 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
 {
     public class SlotAssignmentViewModel : ObservableBase
     {
+        private const long GOLD_ORE_GUID = 1010507;
+
         public static readonly SlotAsset EmptySlot = new()
         {
             DisplayName = "Empty"
@@ -71,14 +75,21 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
         }
         private RegionAsset _selectedRegion;
 
+        private readonly RegionAsset _initialRegion;
+        private readonly HashSet<SlotAsset> _originalSlotItems;
+
 
         public SlotAssignmentViewModel(SlotAssignment slotAssignment, RegionAsset selectedRegion)
         {
             SlotAssignment = slotAssignment;
             _selectedRegion = selectedRegion;
+            _initialRegion = selectedRegion;
 
-            // copy the list of allowed replacements and add the EmptySlot to the end
-            SlotItems = new(slotAssignment.Slot.SlotAsset!.ReplacementSlotAssets);
+            ICollection<SlotAsset> originalSlotItems = slotAssignment.Slot.SlotAsset!.ReplacementSlotAssets;
+            _originalSlotItems = new(originalSlotItems);
+
+            IEnumerable<SlotAsset> additionalOptions = IsMineSlot ? GetNewWorldOreOptions() : Enumerable.Empty<SlotAsset>();
+            SlotItems = new(originalSlotItems.Concat(additionalOptions).Distinct());
             SlotItems.Add(EmptySlot);
 
             CollectionView fertilitiesView = (CollectionView)CollectionViewSource.GetDefaultView(SlotItems);
@@ -93,23 +104,43 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
             if (item is not SlotAsset slotAsset)
                 throw new ArgumentException();
 
+            if (slotAsset == EmptySlot || slotAsset == AssignedSlot)
+                return true;
+
+            if (_selectedRegion == RegionAsset.NewWorldAllOres && IsMineSlot)
+                return slotAsset.GUID == GOLD_ORE_GUID || slotAsset.AssociatedRegions.Contains(RegionAsset.SouthAmerica);
+
+            if (!_originalSlotItems.Contains(slotAsset))
+                return false;
+
+            RegionAsset filterRegion = _selectedRegion == RegionAsset.NewWorldAllOres ? _initialRegion : _selectedRegion;
+
             // Warning: Hardcoding
             // SouthAmerica uses both random mine slots 614 and 1000029. However, none of the
             // replacements for 1000029 contain the New World as an AssociatedRegion. Despite of
             // this, it is possible to have both 1010502 Iron Deposit and 1010507 Gold Deposit in
             // the New World.
-            if (_selectedRegion == RegionAsset.SouthAmerica
+            if (filterRegion == RegionAsset.SouthAmerica
                 && SlotAssignment.Slot.ObjectGuid == SlotAsset.RANDOM_MINE_OLD_WORLD_GUID
-                && (slotAsset.GUID == 1010501 || slotAsset.GUID == 1010507))
+                && (slotAsset.GUID == 1010501 || slotAsset.GUID == GOLD_ORE_GUID))
                 return true;
 
-            if (slotAsset == EmptySlot || slotAsset == AssignedSlot)
-                return true;
-
-            if (slotAsset.AssociatedRegions.Contains(_selectedRegion))
+            if (slotAsset.AssociatedRegions.Contains(filterRegion))
                 return true;
 
             return false;
+        }
+
+        private bool IsMineSlot => SlotAssignment.Slot.ObjectGuid == SlotAsset.RANDOM_MINE_OLD_WORLD_GUID
+            || SlotAssignment.Slot.ObjectGuid == SlotAsset.RANDOM_MINE_NEW_WORLD_GUID
+            || SlotAssignment.Slot.ObjectGuid == SlotAsset.RANDOM_MINE_ARCTIC_GUID;
+
+        private static IEnumerable<SlotAsset> GetNewWorldOreOptions()
+        {
+            return new[] { SlotAsset.RandomMineOldWorld, SlotAsset.RandomMineNewWorld, SlotAsset.RandomMineArctic }
+                .SelectMany(mineSlot => mineSlot.ReplacementSlotAssets)
+                .Where(slot => slot.GUID == GOLD_ORE_GUID || slot.AssociatedRegions.Contains(RegionAsset.SouthAmerica))
+                .DistinctBy(slot => slot.GUID);
         }
 
         private void UpdateFilter()

@@ -2,6 +2,7 @@ using AnnoMapEditor.DataArchives.Assets.Models;
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.UI.Overlays.SelectSlots;
 using System.Reflection;
+using System.Windows.Data;
 using System.Windows.Media;
 
 namespace AnnoMapEditor.Tests;
@@ -39,6 +40,73 @@ public class SlotAssignmentViewModelTests
             pinColor);
     }
 
+    [Fact]
+    public void NewWorldAllOresRegionIncludesNewWorldOresAndGoldOnly()
+    {
+        SetStaticRandomSlots();
+
+        var southAmericaProperty = typeof(RegionAsset).GetProperty(nameof(RegionAsset.SouthAmerica), BindingFlags.Public | BindingFlags.Static);
+        Assert.NotNull(southAmericaProperty);
+        var originalSouthAmerica = (RegionAsset?)southAmericaProperty!.GetValue(null);
+        var southAmerica = new RegionAsset(new System.Xml.Linq.XElement("Values",
+            new System.Xml.Linq.XElement("Standard", new System.Xml.Linq.XElement("GUID", RegionAsset.REGION_SOUTHAMERICA_GUID)),
+            new System.Xml.Linq.XElement("Region", new System.Xml.Linq.XElement("RegionID", "Colony01")),
+            new System.Xml.Linq.XElement("Text", new System.Xml.Linq.XElement("LocaText",
+                new System.Xml.Linq.XElement("English", new System.Xml.Linq.XElement("Text", "The New World"))))));
+        southAmericaProperty.SetValue(null, southAmerica);
+
+        try
+        {
+            var newWorldOre = new SlotAsset { GUID = 1372, AssociatedRegions = new[] { southAmerica } };
+            var goldOre = new SlotAsset { GUID = 1010507, AssociatedRegions = Array.Empty<RegionAsset>() };
+            SetStaticRandomSlot(nameof(SlotAsset.RandomMineNewWorld), new SlotAsset
+            {
+                GUID = SlotAsset.RANDOM_MINE_NEW_WORLD_GUID,
+                ReplacementSlotAssets = new[] { newWorldOre }
+            });
+            SetStaticRandomSlot(nameof(SlotAsset.RandomMineOldWorld), new SlotAsset
+            {
+                GUID = SlotAsset.RANDOM_MINE_OLD_WORLD_GUID,
+                ReplacementSlotAssets = new[] { goldOre }
+            });
+
+            foreach (long mineGuid in new[]
+            {
+                SlotAsset.RANDOM_MINE_OLD_WORLD_GUID,
+                SlotAsset.RANDOM_MINE_NEW_WORLD_GUID,
+                SlotAsset.RANDOM_MINE_ARCTIC_GUID
+            })
+            {
+                var unrelatedOre = new SlotAsset { GUID = 1234, AssociatedRegions = Array.Empty<RegionAsset>() };
+                var viewModel = new SlotAssignmentViewModel(
+                    new SlotAssignment
+                    {
+                        Slot = new Slot
+                        {
+                            ObjectGuid = (int)mineGuid,
+                            SlotAsset = new SlotAsset
+                            {
+                                ReplacementSlotAssets = new[] { unrelatedOre },
+                                AssociatedRegions = Array.Empty<RegionAsset>()
+                            }
+                        }
+                    },
+                    null!);
+
+                viewModel.SelectedRegion = RegionAsset.NewWorldAllOres;
+
+                var visibleSlots = CollectionViewSource.GetDefaultView(viewModel.SlotItems).Cast<SlotAsset>().ToArray();
+                Assert.Contains(newWorldOre, visibleSlots);
+                Assert.Contains(goldOre, visibleSlots);
+                Assert.DoesNotContain(unrelatedOre, visibleSlots);
+            }
+        }
+        finally
+        {
+            southAmericaProperty.SetValue(null, originalSouthAmerica);
+        }
+    }
+
     private static void SetStaticRandomSlots()
     {
         SetStaticRandomSlot(nameof(SlotAsset.RandomMineOldWorld), SlotAsset.RANDOM_MINE_OLD_WORLD_GUID);
@@ -50,8 +118,13 @@ public class SlotAssignmentViewModelTests
 
     private static void SetStaticRandomSlot(string propertyName, long guid)
     {
+        SetStaticRandomSlot(propertyName, new SlotAsset { GUID = guid });
+    }
+
+    private static void SetStaticRandomSlot(string propertyName, SlotAsset slot)
+    {
         var property = typeof(SlotAsset).GetProperty(propertyName, BindingFlags.Public | BindingFlags.Static);
         Assert.NotNull(property);
-        property!.SetValue(null, new SlotAsset { GUID = guid });
+        property!.SetValue(null, slot);
     }
 }

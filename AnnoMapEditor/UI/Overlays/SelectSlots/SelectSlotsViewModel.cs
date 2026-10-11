@@ -75,7 +75,7 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
     public class SelectSlotsViewModel : ObservableBase, IOverlayViewModel
     {
         public event EventHandler<FilteredItemsChangedEventArgs<SlotAssignmentViewModel>>? FilterModified;
-        public IEnumerable<RegionAsset?> Regions { get; init; } = RegionAsset.SupportedRegions;
+        public IEnumerable<RegionAsset?> Regions { get; init; } = RegionAsset.SupportedRegions.Append(RegionAsset.NewWorldAllOres);
 
         private readonly RegionAsset _initialRegion;
 
