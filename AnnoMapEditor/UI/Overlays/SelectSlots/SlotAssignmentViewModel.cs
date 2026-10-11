@@ -145,9 +145,9 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
                     || randomSlotGuid == SlotAsset.RandomMineArctic.GUID)
                     PinBrush = Brushes.Gray;
                 else if (randomSlotGuid == SlotAsset.RandomClay.GUID)
-                    PinBrush = Brushes.SandyBrown;
+                    PinBrush = Brushes.Orange;
                 else if (randomSlotGuid == SlotAsset.RandomOil.GUID)
-                    PinBrush = Brushes.DarkSlateGray;
+                    PinBrush = Brushes.Blue;
                 else
                     PinBrush = Brushes.Red;
 
