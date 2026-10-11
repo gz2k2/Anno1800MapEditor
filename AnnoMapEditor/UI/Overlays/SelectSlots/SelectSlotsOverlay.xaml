@@ -77,16 +77,18 @@
             <ColumnDefinition />
             <ColumnDefinition />
             <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <!-- cancel button -->
-        <Button Grid.Column="4"
+        <Button Grid.Column="3"
+                Grid.ColumnSpan="2"
                 Content="Close"
                 Click="{e:EventBinding OnClosed}"
                 IsCancel="True" />
 
         <!-- filters -->
-        <ComboBox Grid.Row="1"
+        <ComboBox Grid.Row="0"
                   Grid.Column="0" 
                   HorizontalAlignment="Stretch"
                   Margin="4"
@@ -116,6 +118,14 @@
                               IsChecked="{Binding ShowOil, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                               HorizontalAlignment="Center"
                               VerticalAlignment="Center"/>
+                <controls:FancyToggle Grid.Row="0"
+                              Grid.Column="1"
+                              Label="New World all Ores"
+                              OnText="On" OffText="Off"
+                              IsChecked="{Binding NewWorldAllOres, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              Visibility="{Binding ShowNewWorldAllOres, Converter={StaticResource boolToVisibility}}"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"/>
 
         <!-- region warning -->
         <DockPanel Grid.Row="2"
@@ -131,7 +141,7 @@
         <!-- map -->
         <ListBox x:Name="Map"
                  Grid.Row="3"
-                 Grid.ColumnSpan="4"
+                 Grid.ColumnSpan="5"
                  Background="Transparent"
                  ItemsSource="{Binding SlotAssignmentViewModels}"
                  Width="{Binding FixedIsland.IslandAsset.SizeInTiles}"
@@ -202,7 +212,7 @@
         </ItemsControl>
         <ItemsControl x:Name="SlotSelectionsRight"
                   Grid.Row="3"
-                  Grid.Column="3"
+                  Grid.Column="4"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
                   Background="{StaticResource MediumBackgroundBrush}"

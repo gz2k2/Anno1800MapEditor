@@ -75,15 +75,24 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
         }
         private RegionAsset _selectedRegion;
 
-        private readonly RegionAsset _initialRegion;
         private readonly HashSet<SlotAsset> _originalSlotItems;
+
+        public bool NewWorldAllOres
+        {
+            get => _newWorldAllOres;
+            set
+            {
+                SetProperty(ref _newWorldAllOres, value);
+                UpdateFilter();
+            }
+        }
+        private bool _newWorldAllOres;
 
 
         public SlotAssignmentViewModel(SlotAssignment slotAssignment, RegionAsset selectedRegion)
         {
             SlotAssignment = slotAssignment;
             _selectedRegion = selectedRegion;
-            _initialRegion = selectedRegion;
 
             ICollection<SlotAsset> originalSlotItems = slotAssignment.Slot.SlotAsset!.ReplacementSlotAssets;
             _originalSlotItems = new(originalSlotItems);
@@ -107,25 +116,23 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
             if (slotAsset == EmptySlot || slotAsset == AssignedSlot)
                 return true;
 
-            if (_selectedRegion == RegionAsset.NewWorldAllOres && IsMineSlot)
+            if (NewWorldAllOres && _selectedRegion == RegionAsset.SouthAmerica && IsMineSlot)
                 return slotAsset.GUID == GOLD_ORE_GUID || slotAsset.AssociatedRegions.Contains(RegionAsset.SouthAmerica);
 
             if (!_originalSlotItems.Contains(slotAsset))
                 return false;
-
-            RegionAsset filterRegion = _selectedRegion == RegionAsset.NewWorldAllOres ? _initialRegion : _selectedRegion;
 
             // Warning: Hardcoding
             // SouthAmerica uses both random mine slots 614 and 1000029. However, none of the
             // replacements for 1000029 contain the New World as an AssociatedRegion. Despite of
             // this, it is possible to have both 1010502 Iron Deposit and 1010507 Gold Deposit in
             // the New World.
-            if (filterRegion == RegionAsset.SouthAmerica
+            if (_selectedRegion == RegionAsset.SouthAmerica
                 && SlotAssignment.Slot.ObjectGuid == SlotAsset.RANDOM_MINE_OLD_WORLD_GUID
                 && (slotAsset.GUID == 1010501 || slotAsset.GUID == GOLD_ORE_GUID))
                 return true;
 
-            if (slotAsset.AssociatedRegions.Contains(filterRegion))
+            if (slotAsset.AssociatedRegions.Contains(_selectedRegion))
                 return true;
 
             return false;

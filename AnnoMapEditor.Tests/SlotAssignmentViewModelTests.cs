@@ -41,9 +41,11 @@ public class SlotAssignmentViewModelTests
     }
 
     [Fact]
-    public void NewWorldAllOresRegionIncludesNewWorldOresAndGoldOnly()
+    public void NewWorldAllOresToggleAddsNewWorldOresAndGoldToEveryMineSlot()
     {
         SetStaticRandomSlots();
+        var originalRandomMineOldWorld = SlotAsset.RandomMineOldWorld;
+        var originalRandomMineNewWorld = SlotAsset.RandomMineNewWorld;
 
         var southAmericaProperty = typeof(RegionAsset).GetProperty(nameof(RegionAsset.SouthAmerica), BindingFlags.Public | BindingFlags.Static);
         Assert.NotNull(southAmericaProperty);
@@ -91,19 +93,38 @@ public class SlotAssignmentViewModelTests
                             }
                         }
                     },
-                    null!);
-
-                viewModel.SelectedRegion = RegionAsset.NewWorldAllOres;
+                    southAmerica);
 
                 var visibleSlots = CollectionViewSource.GetDefaultView(viewModel.SlotItems).Cast<SlotAsset>().ToArray();
+                Assert.DoesNotContain(newWorldOre, visibleSlots);
+                Assert.DoesNotContain(goldOre, visibleSlots);
+
+                viewModel.NewWorldAllOres = true;
+                visibleSlots = CollectionViewSource.GetDefaultView(viewModel.SlotItems).Cast<SlotAsset>().ToArray();
                 Assert.Contains(newWorldOre, visibleSlots);
                 Assert.Contains(goldOre, visibleSlots);
                 Assert.DoesNotContain(unrelatedOre, visibleSlots);
+
+                viewModel.SelectedRegion = new RegionAsset(new System.Xml.Linq.XElement("Values",
+                    new System.Xml.Linq.XElement("Standard", new System.Xml.Linq.XElement("GUID", RegionAsset.REGION_MODERATE_GUID)),
+                    new System.Xml.Linq.XElement("Region", new System.Xml.Linq.XElement("RegionID", RegionAsset.REGION_MODERATE_REGIONID)),
+                    new System.Xml.Linq.XElement("Text", new System.Xml.Linq.XElement("LocaText",
+                        new System.Xml.Linq.XElement("English", new System.Xml.Linq.XElement("Text", "The Old World"))))));
+                visibleSlots = CollectionViewSource.GetDefaultView(viewModel.SlotItems).Cast<SlotAsset>().ToArray();
+                Assert.DoesNotContain(newWorldOre, visibleSlots);
+                Assert.DoesNotContain(goldOre, visibleSlots);
+
+                viewModel.NewWorldAllOres = false;
+                visibleSlots = CollectionViewSource.GetDefaultView(viewModel.SlotItems).Cast<SlotAsset>().ToArray();
+                Assert.DoesNotContain(newWorldOre, visibleSlots);
+                Assert.DoesNotContain(goldOre, visibleSlots);
             }
         }
         finally
         {
             southAmericaProperty.SetValue(null, originalSouthAmerica);
+            SetStaticRandomSlot(nameof(SlotAsset.RandomMineOldWorld), originalRandomMineOldWorld);
+            SetStaticRandomSlot(nameof(SlotAsset.RandomMineNewWorld), originalRandomMineNewWorld);
         }
     }
 

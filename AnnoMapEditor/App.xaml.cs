@@ -11,6 +11,16 @@ namespace AnnoMapEditor
         public readonly static string TitleShort = "Community Map Editor";
         public readonly static string Title = $"{TitleShort} for Anno 1800";
 
+        public static bool ConfirmClose()
+        {
+            return MessageBox.Show(
+                "Are you sure you want to close the application?\n\nAny unsaved changes will be lost.",
+                TitleShort,
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                MessageBoxResult.No) == MessageBoxResult.Yes;
+        }
+
         public App() {
             ResxLocalizationProvider provider = ResxLocalizationProvider.Instance;
 

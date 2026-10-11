@@ -75,7 +75,7 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
     public class SelectSlotsViewModel : ObservableBase, IOverlayViewModel
     {
         public event EventHandler<FilteredItemsChangedEventArgs<SlotAssignmentViewModel>>? FilterModified;
-        public IEnumerable<RegionAsset?> Regions { get; init; } = RegionAsset.SupportedRegions.Append(RegionAsset.NewWorldAllOres);
+        public IEnumerable<RegionAsset?> Regions { get; init; } = RegionAsset.SupportedRegions;
 
         private readonly RegionAsset _initialRegion;
 
@@ -88,9 +88,12 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
                 UpdateFilter();
 
                 ShowRegionWarning = _selectedRegion != _initialRegion;
+                OnPropertyChanged(nameof(ShowNewWorldAllOres));
             }
         }
         private RegionAsset _selectedRegion;
+
+        public bool ShowNewWorldAllOres => SelectedRegion == RegionAsset.SouthAmerica;
 
         public bool ShowRegionWarning
         {
@@ -133,6 +136,18 @@ namespace AnnoMapEditor.UI.Overlays.SelectSlots
             }
         }
         private bool _showOil = true;
+
+        public bool NewWorldAllOres
+        {
+            get => _newWorldAllOres;
+            set
+            {
+                SetProperty(ref _newWorldAllOres, value);
+                foreach (SlotAssignmentViewModel slotAssignment in SlotAssignmentViewModels)
+                    slotAssignment.NewWorldAllOres = value;
+            }
+        }
+        private bool _newWorldAllOres;
 
         public ObservableCollection<SlotAssignmentViewModel> SlotAssignmentViewModels { get; init; }
         public IEnumerable<SlotAssignmentViewModel> SlotAssignmentViewModelsLeft { get; private set; }

@@ -165,7 +165,7 @@ namespace AnnoMapEditor.UI.Windows.Start
             Settings.PropertyChanged -= Settings_PropertyChanged;
             DataManager.PropertyChanged -= DataManager_PropertyChanged;
             MainWindow mainWindow = new(new MainWindowViewModel());
-            _startWindow.Close();
+            _startWindow.CloseForTransition();
             mainWindow.Show();
         }
     }

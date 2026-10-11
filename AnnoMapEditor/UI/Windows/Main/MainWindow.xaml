@@ -19,6 +19,7 @@
         d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
         mc:Ignorable="d"
         Name="mainWindow"
+        Closing="MainWindow_Closing"
         MouseDown="MainWindow_OnMouseDown"
         Title="MainWindow" Height="900" Width="1440"
         MinHeight="400" MinWidth="1010"

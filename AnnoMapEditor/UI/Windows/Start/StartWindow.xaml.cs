@@ -1,5 +1,6 @@
 ﻿using AnnoMapEditor.DataArchives;
 using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Shell;
 
@@ -10,6 +11,8 @@ namespace AnnoMapEditor.UI.Windows.Start
     /// </summary>
     public partial class StartWindow : Window
     {
+        private bool _isSwitchingToMainWindow;
+
         private StartWindowViewModel _viewModel => DataContext as StartWindowViewModel
             ?? throw new Exception();
 
@@ -54,7 +57,18 @@ namespace AnnoMapEditor.UI.Windows.Start
         public void CloseBtn_Click(object? sender, RoutedEventArgs args)
         {
             Close();
-            App.Current.Shutdown();
+        }
+
+        public void CloseForTransition()
+        {
+            _isSwitchingToMainWindow = true;
+            Close();
+        }
+
+        private void StartWindow_Closing(object? sender, CancelEventArgs e)
+        {
+            if (!_isSwitchingToMainWindow)
+                e.Cancel = !App.ConfirmClose();
         }
     }
 }

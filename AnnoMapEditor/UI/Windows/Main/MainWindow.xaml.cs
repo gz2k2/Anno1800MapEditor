@@ -2,6 +2,7 @@
 using AnnoMapEditor.UI.Overlays.ExportAsMod;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -71,7 +72,11 @@ namespace AnnoMapEditor.UI.Windows.Main
         private void CloseBtn_Click(object sender, RoutedEventArgs e)
         {
             Close();
-            Application.Current.Shutdown();
+        }
+
+        private void MainWindow_Closing(object? sender, CancelEventArgs e)
+        {
+            e.Cancel = !App.ConfirmClose();
         }
 
         private void maximizeBtn_Click(object sender, RoutedEventArgs e)

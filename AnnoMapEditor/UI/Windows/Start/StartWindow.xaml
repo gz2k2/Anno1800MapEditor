@@ -9,6 +9,7 @@
         d:DataContext="{d:DesignInstance Type=local:StartWindowViewModel}"
         mc:Ignorable="d"
         Name="startWindow"
+        Closing="StartWindow_Closing"
         Title="StartWindow" 
         Width="700" Height="360"
         ResizeMode="NoResize"
