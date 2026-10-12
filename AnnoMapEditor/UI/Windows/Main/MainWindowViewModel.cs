@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.Collections.Generic;
 using AnnoMapEditor.DataArchives;
 using AnnoMapEditor.DataArchives.Assets.Models;
 using AnnoMapEditor.DataArchives.Assets;
@@ -297,12 +298,69 @@ namespace AnnoMapEditor.UI.Windows.Main
                 return;
             }
 
-            foreach (IslandAsset island in CustomIslandCatalog.Instance.Islands)
+            Dictionary<string, MenuItem> groupMenus = new(StringComparer.OrdinalIgnoreCase);
+            foreach ((string? groupPath, string? groupName, IslandAsset island) in GroupCustomIslands(
+                CustomIslandCatalog.Instance.Islands,
+                Settings.Instance.CustomIslandsPath))
             {
-                MenuItem islandMenu = new() { Header = island.DisplayName, DataContext = island };
-                islandMenu.Click += (_, _) => AddCustomIsland(island);
-                menu.Items.Add(islandMenu);
+                if (groupPath is null)
+                {
+                    AddCustomIslandMenuItem(menu, island);
+                    continue;
+                }
+
+                if (!groupMenus.TryGetValue(groupPath, out MenuItem? groupMenu))
+                {
+                    groupMenu = new MenuItem { Header = groupName };
+                    groupMenus.Add(groupPath, groupMenu);
+                    menu.Items.Add(groupMenu);
+                }
+
+                AddCustomIslandMenuItem(groupMenu, island);
             }
+        }
+
+        internal static IEnumerable<(string? GroupPath, string? GroupName, IslandAsset Island)> GroupCustomIslands(
+            IEnumerable<IslandAsset> islands,
+            string? rootPath)
+        {
+            string? fullRootPath = string.IsNullOrWhiteSpace(rootPath)
+                ? null
+                : Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootPath));
+
+            foreach (IslandAsset island in islands)
+            {
+                if (fullRootPath is null || string.IsNullOrWhiteSpace(island.CustomSourceDirectory))
+                {
+                    yield return (null, null, island);
+                    continue;
+                }
+
+                string islandDirectory = Path.TrimEndingDirectorySeparator(
+                    Path.GetFullPath(island.CustomSourceDirectory));
+                string? parentDirectory = Path.GetDirectoryName(islandDirectory);
+                if (parentDirectory is null)
+                {
+                    yield return (null, null, island);
+                    continue;
+                }
+
+                string groupPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(parentDirectory));
+                if (Path.GetRelativePath(fullRootPath, groupPath) == ".")
+                {
+                    yield return (null, null, island);
+                    continue;
+                }
+
+                yield return (groupPath, Path.GetFileName(groupPath), island);
+            }
+        }
+
+        private void AddCustomIslandMenuItem(ItemsControl parentMenu, IslandAsset island)
+        {
+            MenuItem islandMenu = new() { Header = island.DisplayName, DataContext = island };
+            islandMenu.Click += (_, _) => AddCustomIsland(island);
+            parentMenu.Items.Add(islandMenu);
         }
 
         private async void SelectCustomIslandFolder()
