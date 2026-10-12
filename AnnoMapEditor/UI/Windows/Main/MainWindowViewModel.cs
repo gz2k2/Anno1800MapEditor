@@ -286,14 +286,14 @@ namespace AnnoMapEditor.UI.Windows.Main
         {
             menu.Items.Clear();
 
-            MenuItem selectFolder = new() { Header = "Custom-island folder auswählen..." };
+            MenuItem selectFolder = new() { Header = "Custom-island folder..." };
             selectFolder.Click += (_, _) => SelectCustomIslandFolder();
             menu.Items.Add(selectFolder);
             menu.Items.Add(new Separator());
 
             if (CustomIslandCatalog.Instance.Islands.Count == 0)
             {
-                menu.Items.Add(new MenuItem { Header = "Keine Custom Islands geladen", IsEnabled = false });
+                menu.Items.Add(new MenuItem { Header = "no Custom Islands loaded", IsEnabled = false });
                 return;
             }
 
@@ -310,7 +310,7 @@ namespace AnnoMapEditor.UI.Windows.Main
             var picker = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog
             {
                 UseDescriptionForTitle = true,
-                Description = "Ordner mit Custom-Island-Unterordnern auswählen"
+                Description = "Select folder with Custom-Island subfolders"
             };
             if (!string.IsNullOrWhiteSpace(Settings.Instance.CustomIslandsPath))
                 picker.SelectedPath = Settings.Instance.CustomIslandsPath;

@@ -98,6 +98,9 @@ namespace AnnoMapEditor.UI.Controls.MapTemplates
         // If a continental island is placed elswhere, it would result in graphical glitches.
         private void SnapContinentalIsland()
         {
+            if (_fixedIsland.IslandAsset.CustomSourceDirectory is not null)
+                return;
+
             if (ToolbarService.Instance.SnapContinentalIslandsToCorners && !IsOutOfBounds && _isContinentalIsland)
             {
                 Vector2 islandCenter = _fixedIsland.Position;
