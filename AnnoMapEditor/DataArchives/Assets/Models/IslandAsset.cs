@@ -27,5 +27,8 @@ namespace AnnoMapEditor.DataArchives.Assets.Models
         public int SizeInTiles { get; init; }
 
         public IReadOnlyDictionary<long, Slot> Slots { get; init; }
+
+        /// <summary>Local island directory to copy when exporting a custom island.</summary>
+        public string? CustomSourceDirectory { get; init; }
     }
 }

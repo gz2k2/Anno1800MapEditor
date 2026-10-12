@@ -1,4 +1,5 @@
 ﻿using AnnoMapEditor.DataArchives;
+using AnnoMapEditor.DataArchives.Assets;
 using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.MapTemplates.Serializing;
 using AnnoMapEditor.UI.Windows.Main;
@@ -53,6 +54,7 @@ namespace AnnoMapEditor.UI.Windows.Start
 
         public async Task OpenMap(string a7tinfoPath, bool fromArchive = false)
         {
+            await CustomIslandCatalog.Instance.RefreshAsync();
             MapTemplateReader mapTemplateReader = new();
             MapTemplate mapTemplate;
 

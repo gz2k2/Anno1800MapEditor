@@ -10,7 +10,7 @@ namespace AnnoMapEditor.DataArchives.Assets.Models
 
         public int SizeInTiles { get; init; }
 
-        public BitmapImage Thumbnail { get; init; }
+        public BitmapImage? Thumbnail { get; init; }
 
         public IReadOnlyDictionary<long, Slot> Slots { get; init; }
     }

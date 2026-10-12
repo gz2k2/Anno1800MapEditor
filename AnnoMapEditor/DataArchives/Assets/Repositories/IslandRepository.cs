@@ -60,6 +60,12 @@ namespace AnnoMapEditor.DataArchives.Assets.Repositories
                 throw new Exception();
         }
 
+        public void AddCustomIsland(IslandAsset island)
+        {
+            _byFilePath[island.FilePath] = island;
+            CollectionChanged?.Invoke(this, new(NotifyCollectionChangedAction.Reset));
+        }
+
         public bool TryGetByFilePath(string mapFilePath, [NotNullWhen(false)] out IslandAsset islandAsset)
 #pragma warning disable CS8762 // Parameter must have a non-null value when exiting in some condition.
             => _byFilePath.TryGetValue(mapFilePath, out islandAsset);

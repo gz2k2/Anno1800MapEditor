@@ -106,5 +106,17 @@ namespace AnnoMapEditor {
                 this["Quickstart"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string CustomIslandsPath {
+            get {
+                return ((string)(this["CustomIslandsPath"]));
+            }
+            set {
+                this["CustomIslandsPath"] = value;
+            }
+        }
     }
 }

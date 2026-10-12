@@ -87,5 +87,12 @@ namespace AnnoMapEditor.UI.Controls.Toolbar
         {
             ToolbarService.Instance.ButtonClick(ToolbarButtonType.PasteIsland);
         }
+
+        private void CustomIslands_Click(object sender, RoutedEventArgs e)
+        {
+            ToolbarService.Instance.ButtonContextClick(ToolbarButtonType.OpenSettingsWindow, sender);
+            ToolbarCustomIslandsContextMenu.PlacementTarget = sender as UIElement;
+            ToolbarCustomIslandsContextMenu.IsOpen = true;
+        }
     }
 }

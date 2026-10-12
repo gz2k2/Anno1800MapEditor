@@ -119,6 +119,10 @@
         <Button IsEnabled="True" Style="{Binding ToolbarService.ShowLabelsButtonState, Converter={StaticResource IsActiveToToolbarButtonStyle}}" Content="&#xe8ec;" Click="ShowLabels_Click" ToolTip="Show island labels"/>
         <Border Width="8" Margin="0,4,7,4" BorderThickness =" 0,0,1,0" BorderBrush="#505050"/>
         <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe897;"/>
-        <Button IsEnabled="False" Style="{StaticResource ToolbarButton}" Content="&#xe713;"/>
+        <Button IsEnabled="True" Style="{StaticResource ToolbarButton}" Content="&#xe713;" Click="CustomIslands_Click" ToolTip="Custom islands">
+            <Button.ContextMenu>
+                <ContextMenu Name="ToolbarCustomIslandsContextMenu"/>
+            </Button.ContextMenu>
+        </Button>
     </StackPanel>
 </UserControl>

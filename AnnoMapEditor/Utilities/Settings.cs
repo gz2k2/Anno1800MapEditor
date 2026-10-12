@@ -87,6 +87,20 @@ namespace AnnoMapEditor.Utilities
             }
         }
 
+        public string? CustomIslandsPath
+        {
+            get => UserSettings.Default.CustomIslandsPath;
+            set
+            {
+                if (value != CustomIslandsPath)
+                {
+                    UserSettings.Default.CustomIslandsPath = value;
+                    UserSettings.Default.Save();
+                    OnPropertyChanged(nameof(CustomIslandsPath));
+                }
+            }
+        }
+
 
         private Settings()
         {

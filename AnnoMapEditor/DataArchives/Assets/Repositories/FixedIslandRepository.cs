@@ -68,8 +68,9 @@ namespace AnnoMapEditor.DataArchives.Assets.Repositories
                     "activemapimage.png"
                 );
 
-            BitmapImage thumbnail = await Task.Run(() => _dataArchive.TryLoadPng(thumbnailPath))
-                ?? throw new Exception($"Could not load island thumbnail '{thumbnailPath}'.");
+            // A thumbnail is useful in the editor but is not required by the game. Some custom
+            // islands intentionally omit activemapimage.png.
+            BitmapImage? thumbnail = await Task.Run(() => _dataArchive.TryLoadPng(thumbnailPath));
 
             // open a7minfo
             string infoFilePath = mapFilePath + "info";

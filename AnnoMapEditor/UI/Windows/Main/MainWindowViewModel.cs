@@ -1,7 +1,9 @@
 ﻿using System.Collections.Specialized;
 using AnnoMapEditor.DataArchives;
 using AnnoMapEditor.DataArchives.Assets.Models;
+using AnnoMapEditor.DataArchives.Assets;
 using AnnoMapEditor.MapTemplates.Models;
+using AnnoMapEditor.MapTemplates.Enums;
 using AnnoMapEditor.MapTemplates.Serializing;
 using AnnoMapEditor.UI.Controls;
 using AnnoMapEditor.UI.Controls.IslandProperties;
@@ -19,6 +21,7 @@ using AnnoMapEditor.UI.Overlays;
 using AnnoMapEditor.UI.Overlays.ExportAsMod;
 using MapTemplate = AnnoMapEditor.MapTemplates.Models.MapTemplate;
 using System;
+using System.Linq;
 
 namespace AnnoMapEditor.UI.Windows.Main
 {
@@ -149,7 +152,10 @@ namespace AnnoMapEditor.UI.Windows.Main
         private void CommonConstructor()
         {
             if (DataManager.IsInitialized)
+            {
                 Status = $"Game Path: {Settings.Instance.GamePath}";
+                _ = CustomIslandCatalog.Instance.RefreshAsync();
+            }
             else
                 Status = "Game files are not loaded. Island placement is unavailable.";
             
@@ -185,6 +191,10 @@ namespace AnnoMapEditor.UI.Windows.Main
                     case ToolbarButtonType.SaveMap:
                         SaveMapFileDialog();
                         break;
+                    case ToolbarButtonType.OpenSettingsWindow:
+                        if (sender is Button { ContextMenu: not null } customIslandsButton)
+                            PopulateCustomIslandMenu(customIslandsButton.ContextMenu);
+                        break;
                     default: break;
                 }
             };
@@ -192,6 +202,7 @@ namespace AnnoMapEditor.UI.Windows.Main
 
         public async Task OpenMap(string a7tinfoPath, bool fromArchive = false)
         {
+            await CustomIslandCatalog.Instance.RefreshAsync();
             MapTemplateFilePath = Path.GetFileName(a7tinfoPath);
             MapTemplateReader mapTemplateReader = new();
 
@@ -269,6 +280,59 @@ namespace AnnoMapEditor.UI.Windows.Main
 
                 menu.Items.Add(groupMenu);
             }
+        }
+
+        public void PopulateCustomIslandMenu(ContextMenu menu)
+        {
+            menu.Items.Clear();
+
+            MenuItem selectFolder = new() { Header = "Custom-island folder auswählen..." };
+            selectFolder.Click += (_, _) => SelectCustomIslandFolder();
+            menu.Items.Add(selectFolder);
+            menu.Items.Add(new Separator());
+
+            if (CustomIslandCatalog.Instance.Islands.Count == 0)
+            {
+                menu.Items.Add(new MenuItem { Header = "Keine Custom Islands geladen", IsEnabled = false });
+                return;
+            }
+
+            foreach (IslandAsset island in CustomIslandCatalog.Instance.Islands)
+            {
+                MenuItem islandMenu = new() { Header = island.DisplayName, DataContext = island };
+                islandMenu.Click += (_, _) => AddCustomIsland(island);
+                menu.Items.Add(islandMenu);
+            }
+        }
+
+        private async void SelectCustomIslandFolder()
+        {
+            var picker = new Ookii.Dialogs.Wpf.VistaFolderBrowserDialog
+            {
+                UseDescriptionForTitle = true,
+                Description = "Ordner mit Custom-Island-Unterordnern auswählen"
+            };
+            if (!string.IsNullOrWhiteSpace(Settings.Instance.CustomIslandsPath))
+                picker.SelectedPath = Settings.Instance.CustomIslandsPath;
+
+            if (true == picker.ShowDialog())
+            {
+                Settings.Instance.CustomIslandsPath = picker.SelectedPath;
+                await CustomIslandCatalog.Instance.RefreshAsync();
+            }
+        }
+
+        private void AddCustomIsland(IslandAsset island)
+        {
+            IslandType islandType = island.IslandType.FirstOrDefault() ?? IslandType.Normal;
+            FixedIslandElement element = new(island, islandType)
+            {
+                Label = island.DisplayName,
+                Position = new((MapTemplate.Size.X - island.SizeInTiles) / 2, (MapTemplate.Size.Y - island.SizeInTiles) / 2)
+            };
+            MapTemplate.Elements.Add(element);
+            UndoRedoStack.Instance.Do(new IslandAddStackEntry(element, MapTemplate));
+            SelectedIsland = element;
         }
 
         public async void OpenMapFileDialog()

@@ -3,6 +3,7 @@ using AnnoMapEditor.DataArchives;
 using AnnoMapEditor.DataArchives.Assets.Models;
 using AnnoMapEditor.DataArchives.Assets.Repositories;
 using AnnoMapEditor.MapTemplates.Serializing;
+using AnnoMapEditor.MapTemplates.Models;
 using AnnoMapEditor.Mods.Enums;
 using AnnoMapEditor.Mods.Models;
 using AnnoMapEditor.Utilities;
@@ -160,8 +161,46 @@ namespace AnnoMapEditor.Mods.Serialization
             }
 
             await WriteAssetsXml(modPath, mapTemplatesToReplace);
+            CopyCustomIslandDirectories(mod.MapTemplate, modPath);
 
             return true;
+        }
+
+        /// <summary>
+        /// Custom islands are self-contained folders. Besides the three a7m sidecars they contain
+        /// _gamedata with meshes and the preview image, so copying individual files is insufficient.
+        /// </summary>
+        private static void CopyCustomIslandDirectories(MapTemplate mapTemplate, string modPath)
+        {
+            IEnumerable<IslandAsset> customIslands = mapTemplate.Elements
+                .OfType<FixedIslandElement>()
+                .Select(element => element.IslandAsset)
+                .Where(asset => !string.IsNullOrWhiteSpace(asset.CustomSourceDirectory))
+                .GroupBy(asset => asset.FilePath, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.First());
+
+            foreach (IslandAsset island in customIslands)
+            {
+                string sourceDirectory = island.CustomSourceDirectory!;
+                string sourceA7m = Path.Combine(sourceDirectory, Path.GetFileName(island.FilePath));
+                if (!Directory.Exists(sourceDirectory) || !File.Exists(sourceA7m))
+                    throw new FileNotFoundException($"Custom island '{island.DisplayName}' is no longer available at '{sourceDirectory}'.", sourceA7m);
+
+                string? virtualDirectory = Path.GetDirectoryName(island.FilePath);
+                if (string.IsNullOrWhiteSpace(virtualDirectory) || Path.IsPathRooted(virtualDirectory))
+                    throw new InvalidDataException($"Invalid custom-island export path '{island.FilePath}'.");
+
+                string targetDirectory = Path.Combine(modPath, virtualDirectory);
+                foreach (string sourceFile in Directory.EnumerateFiles(sourceDirectory, "*", SearchOption.AllDirectories))
+                {
+                    string relativePath = Path.GetRelativePath(sourceDirectory, sourceFile);
+                    string targetFile = Path.Combine(targetDirectory, relativePath);
+                    string? targetFileDirectory = Path.GetDirectoryName(targetFile);
+                    if (targetFileDirectory != null)
+                        Directory.CreateDirectory(targetFileDirectory);
+                    File.Copy(sourceFile, targetFile, overwrite: true);
+                }
+            }
         }
 
         private static async Task WriteAssetsXml(string modPath, IEnumerable<MapTemplateAsset> mapTemplatesToReplace)
