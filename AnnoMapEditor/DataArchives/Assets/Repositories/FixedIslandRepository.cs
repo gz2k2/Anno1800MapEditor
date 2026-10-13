@@ -75,7 +75,7 @@ namespace AnnoMapEditor.DataArchives.Assets.Repositories
             // open a7minfo
             string infoFilePath = mapFilePath + "info";
 
-            IslandTemplateDocument? islandTemplate;
+            IslandTemplateDocument? islandInfo;
             try
             {
                 using (var datastream = _dataArchive.OpenRead(infoFilePath))
@@ -85,7 +85,7 @@ namespace AnnoMapEditor.DataArchives.Assets.Repositories
                         throw new Exception($"Could not load a7minfo '{infoFilePath}'.");
                     datastream.CopyTo(memoryAccStream);
                     memoryAccStream.Seek(0, SeekOrigin.Begin);
-                    islandTemplate = FileDBConvert.DeserializeObject<IslandTemplateDocument>(memoryAccStream, new FileDBSerializerOptions() { IgnoreMissingProperties = true });
+                    islandInfo = FileDBConvert.DeserializeObject<IslandTemplateDocument>(memoryAccStream, new FileDBSerializerOptions() { IgnoreMissingProperties = true });
                 }
             }
             catch (Exception e)
@@ -93,8 +93,35 @@ namespace AnnoMapEditor.DataArchives.Assets.Repositories
                 throw new Exception($"Could not load a7minfo '{infoFilePath}'.", e);
             }
 
+            // The a7minfo sidecar contains metadata such as the map size. Slot objects are
+            // stored in the actual a7m file, however. This is especially important for custom
+            // islands: their a7minfo commonly has no ObjectMetaInfo/SlotObjects section.
+            IslandTemplateDocument? islandTemplate = null;
+            try
+            {
+                using (var datastream = _dataArchive.OpenRead(mapFilePath))
+                using (var memoryAccStream = new MemoryStream())
+                {
+                    if (datastream is null)
+                        throw new Exception($"Could not load a7m '{mapFilePath}'.");
+                    datastream.CopyTo(memoryAccStream);
+                    memoryAccStream.Seek(0, SeekOrigin.Begin);
+                    islandTemplate = FileDBConvert.DeserializeObject<IslandTemplateDocument>(memoryAccStream, new FileDBSerializerOptions() { IgnoreMissingProperties = true });
+                }
+            }
+            catch (Exception e)
+            {
+                // Some archived game islands cannot be deserialized as an
+                // IslandTemplateDocument. Their sidecar is still sufficient because it
+                // contains the slot metadata. Custom islands with slots are expected to have
+                // ObjectMetaInfo in the a7m file and are handled when deserialization succeeds.
+                _logger.LogWarning($"Could not deserialize a7m '{mapFilePath}': {e.Message}");
+            }
+
             // get the island's size in tiles
-            int sizeInTiles = islandTemplate?.MapSize?[0] ?? IslandSize.Default.DefaultSizeInTiles;
+            int sizeInTiles = islandInfo?.MapSize?[0]
+                ?? islandTemplate?.MapSize?[0]
+                ?? IslandSize.Default.DefaultSizeInTiles;
 
             // get slots
             // The list of slots is found at <ObjectMetaInfo><SlotObjects> within the
@@ -117,9 +144,11 @@ namespace AnnoMapEditor.DataArchives.Assets.Repositories
             //     <None>
             //   <None>
             Dictionary<long, Slot> mineSlots = new();
-            if (islandTemplate.ObjectMetaInfo?.SlotObjects is not null)
+            var slotObjects = islandTemplate?.ObjectMetaInfo?.SlotObjects
+                ?? islandInfo?.ObjectMetaInfo?.SlotObjects;
+            if (slotObjects is not null)
             {
-                foreach ((ShortIdValueWrapper id, List<ObjectItem> items) in islandTemplate.ObjectMetaInfo.SlotObjects)
+                foreach ((ShortIdValueWrapper id, List<ObjectItem> items) in slotObjects)
                 {
                     short slotGroupId = id?.value?.id ?? 0;
                     foreach (ObjectItem item in items)
